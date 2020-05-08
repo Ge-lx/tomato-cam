@@ -38,9 +38,9 @@ def setInterval (callback, interval):
 
 defaultSettings = {
 	'flashmode': 'auto',
-	'focusmode': 'infinity'
+	'focusmode': 'infinity',
+    'whitebalance': 'cloudy-daylight'
 }
-
 getCurrentExposure = lambda: 4 if (6 <= date.now().hour >= 21) else 0
 
 def setCurrentSettings ():
