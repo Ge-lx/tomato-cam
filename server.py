@@ -41,7 +41,9 @@ defaultSettings = {
 	'focusmode': 'infinity',
     'whitebalance': 'cloudy-daylight'
 }
-getCurrentExposure = lambda: 4 if (6 <= date.now().hour >= 21) else 0
+def getCurrentExposure ():
+    hour_now = date.now().hour
+    return 4 if (hour_now < 6 or hour_now > 20) else 0
 
 def setCurrentSettings ():
 	defaultSettings['exposure'] = getCurrentExposure()
