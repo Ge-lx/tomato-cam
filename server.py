@@ -45,7 +45,6 @@ getCurrentExposure = lambda: 4 if (6 <= date.now().hour >= 21) else 0
 
 def setCurrentSettings ():
 	defaultSettings['exposure'] = getCurrentExposure()
-
 	print(f'Current settings: {defaultSettings}')
 
 	for setting in defaultSettings:
@@ -55,9 +54,7 @@ def setCurrentSettings ():
 # ---------------------------------------
 
 def refreshImage ():
-	print('Updating camera settings...')
 	setCurrentSettings()
-	print('Fetching new image.')
 	os.system('rm current.jpg')
 	url = 'http://192.168.178.124:8080/photoaf.jpg'
 	wget.download(url, 'current.jpg');
