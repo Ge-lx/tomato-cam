@@ -58,7 +58,7 @@ def setCurrentSettings ():
 def refreshImage ():
 	setCurrentSettings()
 	os.system('rm current.jpg')
-	url = 'http://192.168.178.124:8080/photoaf.jpg'
+	url = 'http://192.168.178.124:8080/photo.jpg'
 	wget.download(url, 'current.jpg');
 
 def refreshAndSaveImage ():
