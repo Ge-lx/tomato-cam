@@ -13,7 +13,7 @@ HOST = 'http://192.168.178.124:8080'
 URL_SETTINGS = f'{HOST}/settings'
 URL_IMAGE = f'{HOST}/photo.jpg'
 
-IMAGE_ROOT = '/tmp/test/'
+IMAGE_ROOT = '/mnt/storage/tomato-cam/'
 
 # ---------------------- EVENTS ----------------------------------------
 def event__new_day_started ():
