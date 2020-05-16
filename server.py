@@ -37,7 +37,7 @@ def setInterval (callback, interval):
 
 def runAsync (callback):
 	thread = Thread(target=callback, daemon=True)
-	timerThread.start()
+	thread.start()
 
 # --------------- CONFIG -----------------------------------------------
 
