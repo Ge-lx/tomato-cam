@@ -1,6 +1,7 @@
 import time
 from datetime import datetime, date, timedelta
 import os
+import sys
 from threading import Thread
 from requests import get
 from pathlib import Path
@@ -53,7 +54,7 @@ def setInterval (callback, interval):
 
 image_dir = Path(IMAGE_ROOT)
 if (image_dir.is_dir() == False):
-	raise Exception(f'Cannot find folder "{IMAGE_ROOT}". Please make sure it exists.')
+	sys.exit(f'Cannot find folder "{IMAGE_ROOT}". Please make sure it exists.')
 
 def getFolderForDate (date, create = True):
 	foldername = date.isoformat()
