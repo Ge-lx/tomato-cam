@@ -10,21 +10,6 @@ import http.server
 import socketserver
 from http.server import SimpleHTTPRequestHandler as ReqHandler
 
-HOST = 'http://192.168.178.124:8080'
-URL_SETTINGS = f'{HOST}/settings'
-URL_IMAGE = f'{HOST}/photo.jpg'
-
-IMAGE_ROOT = '/mnt/storage/tomato-cam/'
-
-# ---------------------- EVENTS ----------------------------------------
-def event__new_day_started ():
-	print('New day started!')
-	folder_yesterday = getFolderForDate(date.today() - timedelta(days = 1), create = False)
-	print(f'Yesterdays folder: {folder_yesterday}')
-
-def event__new_image_captured (filename):
-	print(f'New image captured: {filename}')
-
 # ---------------------- UTILS -----------------------------------------
 
 def setInterval (callback, interval):
@@ -49,6 +34,35 @@ def setInterval (callback, interval):
     timerThread = Thread(target=timerExecutor, daemon=True)
     timerThread.start()
     return cancelTimer
+
+def runAsync (callback):
+	thread = Thread(target=callback, daemon=True)
+	timerThread.start()
+
+# --------------- CONFIG -----------------------------------------------
+
+HOST = 'http://192.168.178.124:8080'
+URL_SETTINGS = f'{HOST}/settings'
+URL_IMAGE = f'{HOST}/photo.jpg'
+
+IMAGE_ROOT = '/mnt/storage/tomato-cam/'
+FFMPEG_COMMAND = lambda image_glob: f'ffmpeg -pattern_type glob -i {image_glob} -s 1920x1440 output.mp4'
+
+def render_video_for_folder (folder):
+	image_glob = f'"{str(folder_yesterday)}/*.jpg"'
+	print(f'Rendering video for {image_glob}...')
+	os.system(FFMPEG_COMMAND(image_glob))
+	print(f'Rendering finished.')
+
+# ---------------------- EVENTS ----------------------------------------
+
+def event__new_day_started ():
+	print('New day started!')
+	folder_yesterday = getFolderForDate(date.today() - timedelta(days = 1), create = False)
+	runAsync(lambda: render_video_for_folder(folder_yesterday))
+
+def event__new_image_captured (filename):
+	print(f'New image captured: {filename}')
 
 # --------------------  FILE MANAGEMENT  -------------------------------
 
