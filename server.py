@@ -46,12 +46,12 @@ URL_SETTINGS = f'{HOST}/settings'
 URL_IMAGE = f'{HOST}/photo.jpg'
 
 IMAGE_ROOT = '/mnt/storage/tomato-cam/'
-FFMPEG_COMMAND = lambda image_glob: f'ffmpeg -pattern_type glob -i {image_glob} -s 1920x1440 output.mp4'
+FFMPEG_COMMAND = lambda cwd: f'ffmpeg -loglevel warning -hide_banner -nostats -pattern_type glob -i "{cwd}/*.jpg" -s 1920x1440 "{cwd}/output.mp4"'
 
 def render_video_for_folder (folder):
-	image_glob = f'"{str(folder)}/*.jpg"'
-	print(f'Rendering video for {image_glob}...')
-	os.system(FFMPEG_COMMAND(image_glob))
+	cwd = str(folder)
+	print(f'Rendering video for {cwd}...')
+	os.system(FFMPEG_COMMAND(cwd))
 	print(f'Rendering finished.')
 
 # ---------------------- EVENTS ----------------------------------------
