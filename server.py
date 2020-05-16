@@ -49,7 +49,7 @@ IMAGE_ROOT = '/mnt/storage/tomato-cam/'
 FFMPEG_COMMAND = lambda image_glob: f'ffmpeg -pattern_type glob -i {image_glob} -s 1920x1440 output.mp4'
 
 def render_video_for_folder (folder):
-	image_glob = f'"{str(folder_yesterday)}/*.jpg"'
+	image_glob = f'"{str(folder)}/*.jpg"'
 	print(f'Rendering video for {image_glob}...')
 	os.system(FFMPEG_COMMAND(image_glob))
 	print(f'Rendering finished.')
