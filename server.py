@@ -149,6 +149,7 @@ def route__days (req, params):
 			'hasVideo': hasVideo,
 			'numOfImages': numOfImages,
 		})
+		days.sort(key = lambda x: x['date'])
 
 	return req.do_JSON(days)
 
