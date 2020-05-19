@@ -252,5 +252,5 @@ class TCPReuseServer (TCPServer):
 	allow_reuse_address = True
 
 # Start the Server
-my_server = TCPReuseServer(("", 9000), RouterRequestHandler)
+my_server = TCPReuseServer(("", 80), RouterRequestHandler)
 my_server.serve_forever()
