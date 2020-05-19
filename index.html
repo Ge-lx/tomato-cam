@@ -74,6 +74,28 @@
 					};
 				}]);
 
+				define('info', [{ noCache: true }, (bind) => {
+					return {
+						$template: `
+							<div class="info">
+								<h3 bnc-bind="lastImageTimestamp$"></h3>
+								<p class="settings" bnc-bind="settings$"></p>
+							</div>
+						`,
+						$link: (scope, element) => {
+							const { info$ } = bind(scope, element, ['info$']);
+							const lastImageTimestamp$ = ComputedObservable(info$, info => info.lastImageTimestamp);
+							const settings$ = ComputedObservable(info$, info => JSON.stringify(info.settings));
+
+							scope.$onDestroy(() => {
+								lastImageTimestamp$.destory();
+								settings$.destory();
+							});
+							scope.$assign({ lastImageTimestamp$, settings$ });
+						}
+					};
+				}]);
+
 				define('resources', () => {
 					const resources = {};
 
@@ -90,8 +112,8 @@
 					};
 
 					return {
-						currentInfo$: resource('http://192.168.178.128/info', {}),
-						currentDays$: resource('http://192.168.178.128/days', [])
+						currentInfo$: resource(`${window.location.origin}/info`, {}),
+						currentDays$: resource(`${window.location.origin}/days`, [])
 					};
 				});
 
@@ -102,8 +124,12 @@
 		<bnc-root>
 			<bnc-module name="resources">
 				<div bnc-for="day in currentDays$">
-					<bnc-element name="day" day="day"></bnc-element>
+					<div>
+						<bnc-element name="day" day="day"></bnc-element>
+					</div>
 				</div>
+
+				<bnc-element name="info" info$="currentInfo$"></bnc-element>
 			</bnc-module>
 		</bnc-root>
 	</body>

@@ -152,6 +152,9 @@ def route__days (req, params):
 
 	return req.do_JSON(days)
 
+def __route__file (filename):
+	return lambda req, params: req.do_FILE(filename)
+
 def route__static (req, params):
 	return req.do_FILE(req.path)
 
@@ -162,8 +165,10 @@ def route__currentImage (req, params):
 def __routes (router):
 	router.addRoute('/favicon.ico', route__static)
 
-	router.addRoute('', route__currentImage)
-	router.addRoute('/', route__currentImage)
+	route__index_file = __route__file('/index.html')
+	router.addRoute('', route__index_file)
+	router.addRoute('/', route__index_file)
+
 	router.addRoute('/current.jpg', route__currentImage)
 
 	router.addRoute('/days', route__days)
