@@ -6,10 +6,6 @@ from threading import Thread
 from requests import get
 from pathlib import Path
 
-import http.server
-import socketserver
-from http.server import SimpleHTTPRequestHandler as ReqHandler
-
 # ---------------------- UTILS -----------------------------------------
 
 def setInterval (callback, interval):
@@ -129,15 +125,93 @@ def refreshAndSaveImage ():
 setInterval(refreshAndSaveImage, 3 * 60) # 20 images per hour | ~28GB per month at 2MB per image
 # ------------------ HTTP ----------------------------------------------
 
-class CustomRequestHandler(ReqHandler):
-    def do_GET(self):
-        if self.path in ['/current', '', '/']:
-            refreshImage()
-            self.path = 'current.jpg'
-            return ReqHandler.do_GET(self)
-        else:
-            return ReqHandler.send_error(self, 404)
-        
-# start the server
-my_server = socketserver.TCPServer(("", 80), CustomRequestHandler)
+# Status of last image recording
+# Exposure + flash control ?
+
+def route__currentImage (req, params):
+	refreshImage()
+	req.path = 'current.jpg'
+	return req
+
+def __routes (router):
+	router.addRoute('', route__currentImage)
+	router.addRoute('/', route__currentImage)
+	router.addRoute('/current.jpg', route__currentImage)
+
+
+
+# ------------- ROUTER -----------------------
+
+import re, functools
+from socketserver import TCPServer
+from http.server import SimpleHTTPRequestHandler as ReqHandler
+
+class Route:
+	def __init__ (self, pathAndParams):
+		self.params = []
+
+		def replacePlaceholder (matchobj):
+			paramName = matchobj.group(1)
+			self.params.append(paramName)
+			return '([^/]+)'
+
+		routeRegex = re.sub(':([\w]*)', replacePlaceholder, f'^{pathAndParams}$')
+		self.routeRegex = re.compile(routeRegex)
+
+	def exec (self, path):
+		match = self.routeRegex.match(path)
+
+		if match is None:
+			return False
+		else:
+			params = {}
+			for idx, paramName in enumerate(self.params):
+				params[paramName] = match.group(idx + 1)
+			return params
+
+class Router:
+	def __init__ (self):
+		self.routes = []
+
+	def addRoute (self, pathAndParams, handler):
+		route = Route(pathAndParams)
+		self.routes.append((route, handler))
+
+	def exec (self, req):
+		for (route, handler) in self.routes:
+			params = route.exec(req.path)
+			if params is False:
+				continue
+			else:
+				return handler(req, params)
+
+# Setup the Router
+
+router = Router()
+__routes(router)
+
+def route__404 (req, params):
+	ReqHandler.send_error(req, 404)
+	return None
+router.addRoute('.*', route__404)
+
+# Setup the HTTP Server
+
+class RouterRequestHandler(ReqHandler):
+	def do_GET(self):
+		try:
+			req = router.exec(self)
+			if req is None:
+				# We expect the route to handle this
+				return
+			else:
+				return ReqHandler.do_GET(req)
+		except:
+			ReqHandler.send_error(self, 500)
+
+class TCPReuseServer (TCPServer):
+	allow_reuse_address = True
+
+# Start the Server
+my_server = TCPReuseServer(("", 9000), RouterRequestHandler)
 my_server.serve_forever()
