@@ -164,18 +164,19 @@ def route__currentImage (req, params):
 	return req.do_FILE('/current.jpg')
 
 def __routes (router):
-	router.addRoute('/favicon.ico', route__static)
-
+	# Static files
 	route__index_file = __route__file('/index.html')
 	router.addRoute('', route__index_file)
 	router.addRoute('/', route__index_file)
+	router.addRoute('/favicon.ico', route__static)
+	router.addRoute('/data/[^/]+/output.mp4', route__static)
 
+	# Current image
 	router.addRoute('/current.jpg', route__currentImage)
-
+	
+	# Dynamic routes
 	router.addRoute('/days', route__days)
 	router.addRoute('/info', route__info)
-
-
 
 # ------------- ROUTER -----------------------
 
