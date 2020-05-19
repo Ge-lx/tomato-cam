@@ -52,12 +52,14 @@ def render_video_for_folder (folder):
 
 # ---------------------- EVENTS ----------------------------------------
 
-def event__new_day_started ():
+def event__day_finished (folder):
 	print('New day started!')
-	folder_yesterday = getFolderForDate(date.today() - timedelta(days = 1), create = False)
-	runAsync(lambda: render_video_for_folder(folder_yesterday))
+	runAsync(lambda: render_video_for_folder(folder))
 
+lastImageTimestamp = 0
 def event__new_image_captured (filename):
+	global lastImageTimestamp
+	lastImageTimestamp = int(time.time())
 	print(f'New image captured: {filename}')
 
 # --------------------  FILE MANAGEMENT  -------------------------------
@@ -71,9 +73,12 @@ def getFolderForDate (date, create = True):
 	folder = image_dir / foldername
 
 	# Automatically create new folders
-	if (folder.is_dir() == False & create):
+	if (folder.is_dir() == False and create):
 		folder.mkdir()
-		event__new_day_started()
+
+		folder_yesterday = getFolderForDate(date.today() - timedelta(days = 1), create = False)
+		if (folder_yesterday.is_dir()):
+			event__day_finished(folder_yesterday)
 
 	return folder
 
@@ -95,8 +100,6 @@ def getCurrentExposure ():
 
 def setCurrentSettings ():
 	defaultSettings['exposure'] = getCurrentExposure()
-	print(f'Current settings: {defaultSettings}')
-
 	for setting in defaultSettings:
 		value = defaultSettings[setting]
 		get(f'{URL_SETTINGS}/{setting}?set={value}')
@@ -128,21 +131,45 @@ setInterval(refreshAndSaveImage, 3 * 60) # 20 images per hour | ~28GB per month 
 # Status of last image recording
 # Exposure + flash control ?
 
+def route__info (req, params):
+	return req.do_JSON({
+		'settings': defaultSettings,
+		'lastImageTimestamp': lastImageTimestamp
+	})
+
+def route__days (req, params):
+	days = {}
+
+	for p in Path(IMAGE_ROOT).iterdir():
+		if not p.is_dir(): continue
+		hasVideo = (p / 'output.mp4').is_file()
+		numOfImages = len([q for q in p.iterdir() if q.name.endswith('.jpg')])
+		days[p.name] = { 'hasVideo': hasVideo, 'numOfImages': numOfImages }
+
+	return req.do_JSON(days)
+
+def route__static (req, params):
+	return req.do_FILE(req.path)
+
 def route__currentImage (req, params):
 	refreshImage()
-	req.path = 'current.jpg'
-	return req
+	return req.do_FILE('/current.jpg')
 
 def __routes (router):
+	router.addRoute('/favicon.ico', route__static)
+
 	router.addRoute('', route__currentImage)
 	router.addRoute('/', route__currentImage)
 	router.addRoute('/current.jpg', route__currentImage)
+
+	router.addRoute('/days', route__days)
+	router.addRoute('/info', route__info)
 
 
 
 # ------------- ROUTER -----------------------
 
-import re, functools
+import re, functools, json
 from socketserver import TCPServer
 from http.server import SimpleHTTPRequestHandler as ReqHandler
 
@@ -191,23 +218,35 @@ router = Router()
 __routes(router)
 
 def route__404 (req, params):
-	ReqHandler.send_error(req, 404)
-	return None
+	req.send_error(404)
 router.addRoute('.*', route__404)
 
 # Setup the HTTP Server
 
 class RouterRequestHandler(ReqHandler):
-	def do_GET(self):
+
+	def _set_headers (self):
+		self.send_response(200)
+		self.send_header('Content-type', 'application/json')
+		self.end_headers()
+		
+	def do_HEAD (self):
+		self._set_headers()
+
+	def do_JSON (self, obj): 
+		self._set_headers()
+		self.wfile.write(json.dumps(obj).encode())
+
+	def do_FILE (self, path):
+		self.path = path
+		return ReqHandler.do_GET(self)
+
+	def do_GET (self):
 		try:
-			req = router.exec(self)
-			if req is None:
-				# We expect the route to handle this
-				return
-			else:
-				return ReqHandler.do_GET(req)
-		except:
-			ReqHandler.send_error(self, 500)
+			return router.exec(self)
+		except Exception as e:
+			self.send_error(500)
+			raise e
 
 class TCPReuseServer (TCPServer):
 	allow_reuse_address = True
