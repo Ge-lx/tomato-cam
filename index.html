@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<title>Tomato Cam</title>
+		<meta name="author" content="gelx">
+
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="mobile-web-app-capable" content="yes">
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+		<meta name="theme-color" content="rgb(51, 51, 51)">
+
+		<script type="text/javascript" src="https://ge-lx.github.io/bunch/bunch.js"></script>
+		<script type="text/javascript" src="https://ge-lx.github.io/bunch/bnc.js"></script>
+		<script type="text/javascript">
+			(function ({ define, resolve, Observable, ComputedObservable }) {
+				const sendFetch = async (method = 'GET', url, body) => {
+					const request = {
+						method,
+						mode: 'cors',
+						cache: 'no-cache',
+						redirect: 'follow',
+						referrerPolicy: 'origin'
+					};
+
+					if (typeof body === 'object') {
+						request.headers = { 'Content-Type': 'application/json' };
+						request.body = JSON.stringify(body)
+					}
+
+					
+					let response;
+					try {
+						response = await fetch(url, request);
+					} catch (error) {
+						throw new Error(error.message, url, request);
+					}
+					const data = await response.json();
+					if (response.ok) {
+						return data;
+					} else {
+						throw new Error(response.status, data.error, url, request);
+					}
+				};
+
+				define('bind', () => {
+					return (scope, element, obj) => {
+						const results = {};
+						for (let attributeName of obj) {
+							const expression = element.getAttribute(attributeName);
+							if (attributeName.endsWith('$')) {
+								results[attributeName] = scope.$get$(expression);
+							} else {
+								results[attributeName] = scope.$get(expression);
+							}
+						}
+						return results;
+					};
+				});
+
+				define('day', [{ noCache: true }, (bind) => {
+					return {
+						$template: `
+							<div class="day">
+								<h3 bnc-bind="day.date"></h3>
+								<button bnc-if="day.hasVideo">view video</button>
+								<p class="images" bnc-bind="day.numOfImages"></p>
+							</div>
+						`,
+						$link: (scope, element) => {
+							const { day } = bind(scope, element, ['day']);
+							scope.$assign({ day });
+						}
+					};
+				}]);
+
+				define('resources', () => {
+					const resources = {};
+
+					const resource = (url, defaultValue) => {
+						const obs$ = Observable(defaultValue);
+
+						const update = async () => {
+							obs$.value = await sendFetch('GET', url);
+						};
+
+						setTimeout(update, 5000);
+						update();
+						return obs$;
+					};
+
+					return {
+						currentInfo$: resource('http://192.168.178.128/info', {}),
+						currentDays$: resource('http://192.168.178.128/days', [])
+					};
+				});
+
+			}(bnc_bunch));		
+		</script>
+	</head>
+	<body>
+		<bnc-root>
+			<bnc-module name="resources">
+				<div bnc-for="day in currentDays$">
+					<bnc-element name="day" day="day"></bnc-element>
+				</div>
+			</bnc-module>
+		</bnc-root>
+	</body>
+</html>

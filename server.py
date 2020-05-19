@@ -138,13 +138,17 @@ def route__info (req, params):
 	})
 
 def route__days (req, params):
-	days = {}
+	days = []
 
 	for p in Path(IMAGE_ROOT).iterdir():
 		if not p.is_dir(): continue
 		hasVideo = (p / 'output.mp4').is_file()
 		numOfImages = len([q for q in p.iterdir() if q.name.endswith('.jpg')])
-		days[p.name] = { 'hasVideo': hasVideo, 'numOfImages': numOfImages }
+		days.append({
+			'date': p.name,
+			'hasVideo': hasVideo,
+			'numOfImages': numOfImages,
+		})
 
 	return req.do_JSON(days)
 
