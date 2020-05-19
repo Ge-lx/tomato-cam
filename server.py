@@ -13,27 +13,27 @@ from http.server import SimpleHTTPRequestHandler as ReqHandler
 # ---------------------- UTILS -----------------------------------------
 
 def setInterval (callback, interval):
-    cancelled = False
+	cancelled = False
 
-    def timerExecutor ():
-        nonlocal cancelled
+	def timerExecutor ():
+		nonlocal cancelled
 
-        nextCallTimestamp = time.time()
-        while cancelled != True:
-            nextCallTimestamp = nextCallTimestamp + interval
-            try:
-            	callback()
-            except Exception as e:
-            	print(f'Exception while executing interval callback: {e}')
-            time.sleep(max(0, nextCallTimestamp - time.time()))
+		nextCallTimestamp = time.time()
+		while cancelled != True:
+			nextCallTimestamp = nextCallTimestamp + interval
+			try:
+				callback()
+			except Exception as e:
+				print(f'Exception while executing interval callback: {e}')
+			time.sleep(max(0, nextCallTimestamp - time.time()))
 
-    def cancelTimer ():
-        nonlocal cancelled
-        cancelled = True
+	def cancelTimer ():
+		nonlocal cancelled
+		cancelled = True
 
-    timerThread = Thread(target=timerExecutor, daemon=True)
-    timerThread.start()
-    return cancelTimer
+	timerThread = Thread(target=timerExecutor, daemon=True)
+	timerThread.start()
+	return cancelTimer
 
 def runAsync (callback):
 	thread = Thread(target=callback, daemon=True)
@@ -91,11 +91,11 @@ def getPathForImage ():
 defaultSettings = {
 	'flashmode': 'auto',
 	'focusmode': 'infinity',
-    'whitebalance': 'cloudy-daylight'
+	'whitebalance': 'cloudy-daylight'
 }
 def getCurrentExposure ():
-    hour_now = datetime.now().hour
-    return 4 if (hour_now < 6 or hour_now > 20) else 0
+	hour_now = datetime.now().hour
+	return 4 if (hour_now < 6 or hour_now > 20) else 0
 
 def setCurrentSettings ():
 	defaultSettings['exposure'] = getCurrentExposure()
@@ -121,11 +121,11 @@ def refreshImage ():
 			fd.write(chunk)
 
 def refreshAndSaveImage ():
-    refreshImage()
-    filename = getPathForImage()
-    os.system(f'cp current.jpg {filename}')
-    event__new_image_captured(filename)
-    
+	refreshImage()
+	filename = getPathForImage()
+	os.system(f'cp current.jpg {filename}')
+	event__new_image_captured(filename)
+	
 setInterval(refreshAndSaveImage, 3 * 60) # 20 images per hour | ~28GB per month at 2MB per image
 # ------------------ HTTP ----------------------------------------------
 
