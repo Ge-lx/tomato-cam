@@ -63,13 +63,14 @@
 						$template: `
 							<div class="day">
 								<h3 bnc-bind="day.date"></h3>
-								<button bnc-if="day.hasVideo">view video</button>
+								<a bnc-if="day.hasVideo" bnc-attr="href: link">view video</button>
 								<p class="images" bnc-bind="day.numOfImages"></p>
 							</div>
 						`,
 						$link: (scope, element) => {
 							const { day } = bind(scope, element, ['day']);
-							scope.$assign({ day });
+							const link = `${window.location.origin}/data/${day.date}/output.mp4`
+							scope.$assign({ day, link });
 						}
 					};
 				}]);
