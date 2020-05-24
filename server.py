@@ -149,9 +149,9 @@ def route__days (req, params):
 			'hasVideo': hasVideo,
 			'numOfImages': numOfImages,
 		})
-		days.sort(key = lambda x: -x['date'])
+		days.sort(key = lambda x: x['date'])
 
-	return req.do_JSON(days)
+	return req.do_JSON(days[::-1])
 
 def __route__file (filename):
 	return lambda req, params: req.do_FILE(filename)
