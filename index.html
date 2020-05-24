@@ -5,11 +5,10 @@
 		<title>Tomato Cam</title>
 		<meta name="author" content="gelx">
 
-		<meta name="apple-mobile-web-app-capable" content="yes">
-		<meta name="mobile-web-app-capable" content="yes">
 		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-		<meta name="theme-color" content="rgb(51, 51, 51)">
+		<meta name="theme-color" content="#151515">
 
+		<link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
 		<script type="text/javascript" src="https://ge-lx.github.io/bunch/bunch.js"></script>
 		<script type="text/javascript" src="https://ge-lx.github.io/bunch/bnc.js"></script>
 		<script type="text/javascript">
@@ -62,9 +61,19 @@
 					return {
 						$template: `
 							<div class="day">
-								<h3 bnc-bind="day.date"></h3>
-								<a bnc-if="day.hasVideo" bnc-attr="href: link">view video</a>
-								<p class="images" bnc-bind="day.numOfImages"></p>
+								<h3 bnc-bind="new Date(day.date).toLocaleDateString()"></h3>
+								<div>
+									<a bnc-if="day.hasVideo" bnc-attr="href: link">
+										<button>
+											<i class="ri-speed-fill"></i>
+											Timelapse
+										</button>
+									</a>
+									<div class="images">
+										<p bnc-bind="day.numOfImages"></p>
+										<i class="ri-image-2-fill"></i>
+									</div>
+								</div>
 							</div>
 						`,
 						$link: (scope, element) => {
@@ -77,27 +86,68 @@
 
 				define('info', [{ noCache: true }, (bind) => {
 					return {
-						$template: `
-							<div class="info">
-								<div>
-									<h1>Last image taken at</h1>
-									<h2 bnc-bind="lastImageTime$"></h2>
+						$template: `								
+							<div class="panel__section">
+								<h3>Settings</h3>
+								<div class="panel__row">
+									<p>Focus</p>
+									<i bnc-class="focusModeClass$"></i>
 								</div>
-								<pre class="settings" bnc-bind="settings$"></pre>
+								<div class="panel__row">
+									<p>Flash</p>
+									<i bnc-class="flashModeClass$"></i>
+								</div>
+								<div class="panel__row">
+									<p>White balance</p>
+									<i bnc-class="whiteBalanceClass$"></i>
+								</div>
+								<div class="panel__row">
+									<p>Exposure correction</p>
+									<p bnc-bind="exposureCorrection$"></p>
+								</div>
 							</div>
+							<div class="panel__section highlighted">
+								<h3>Status</h3>
+								<div class="panel__row">
+									<p>Last image taken at</p>
+									<p bnc-bind="lastImageTime$"></p>
+								</div>
+								<div class="panel__row">
+									<a href="/current.jpg"><button>View current image</button></a>
+								</div>
+							</div>
+							<div class="panel__section" style="display: none"></div>
 						`,
 						$link: (scope, element) => {
 							const { info$ } = bind(scope, element, ['info$']);
+
+							const settings$ = ComputedObservable(info$, info => info.settings || {});
+
 							const lastImageTime$ = ComputedObservable(info$, info => {
 								return (new Date(info.lastImageTimestamp * 1000)).toLocaleTimeString();
 							});
-							const settings$ = ComputedObservable(info$, info => JSON.stringify(info.settings));
+							const flashModeClass$ = ComputedObservable(settings$, settings => {
+								return settings.flashmode === 'auto' ? 'ri-flashlight-fill' : 'ri-flashlight-line';
+							});
+							const focusModeClass$ = ComputedObservable(settings$, settings => {
+								return settings.focusmode === 'infinity' ? 'ri-focus-3-fill' : 'ri-question-fill';
+							});
+							const whiteBalanceClass$ = ComputedObservable(settings$, settings => {
+								return settings.whitebalance === 'cloudy-daylight' ? 'ri-sun-cloudy-fill' : 'ri-question-fill';
+							});
+							const exposureCorrection$ = ComputedObservable(settings$, settings => settings.exposure || 0);
 
 							scope.$onDestroy(() => {
-								lastImageTime$.destory();
-								settings$.destory();
+								[lastImageTime$, flashModeClass$, focusModeClass$, whiteBalanceClass$, exposureCorrection$]
+									.forEach(obs => obs.destory());
 							});
-							scope.$assign({ lastImageTime$, settings$ });
+							scope.$assign({
+								lastImageTime$,
+								flashModeClass$,
+								focusModeClass$,
+								whiteBalanceClass$,
+								exposureCorrection$
+							});
 						}
 					};
 				}]);
@@ -128,66 +178,244 @@
 		<style type="text/css">
 			* {
 				box-sizing: border-box;
+				/*outline: 1px solid red;*/
+			}
+
+			html {
+				font-family: 'Quicksand', sans-serif;
+				color: #1a1a1a;
+				height: 100%;
+			}
+
+			body {
+				margin: 0;
+				padding: 0;
+				height: 100%;
 			}
 
 			bnc-root {
 				display: flex;
-				width: fit-content;
-				max-width: 100%;
-				margin: auto;
+				flex-direction: column;
+				justify-content: stretch;
+				min-height: 100%;
 			}
 
-			bnc-module {
-				display: block;
+			bnc-element {
+				display: flex;
+				flex-grow: 1;
+			}
+
+			a {
+				text-decoration: none;
+			}
+
+			button {
+				background-color: #ed6142;
+				border: 2px solid #151515;
+				color: #151515;
+				min-width: 80px;
+				font-size: 18px;
+				border-radius: 18px;
+				padding: 3px 10px;
+				box-shadow: 0px 0px 4px 0px rgba(0, 0, 0, 0.42);
+				cursor: pointer;
+				transition: box-shadow 0.15s ease-out;
+				vertical-align: baseline;
+			}
+			.highlighted button {
+				background-color: #151515;
+				color: white;
+			}
+			button:hover {
+				box-shadow: 0px 2px 8px 0px rgba(0, 0, 0, 0.42);
+			}
+
+			i.placeholder {
+			    font-size: 100px;
+			    color: rgba(0, 0, 0, 0.12);
+			    padding: 20px 70px;
+			    margin: auto;
+			}
+
+			/* PANELS */
+			.panel {
+				display: flex;
+				flex-flow: column nowrap;
+			}
+			.panel__header {
+				padding: 6px 20px;
+				background-color: #151515;
+				color: #ed6142;
+				display: flex;
+				flex-direction: row;
+			}
+			.panel__header > h2 {
+				margin: 0;
+				font-weight: bold;
+			}
+			.panel__section {
+				padding: 0px 20px;
+				border-bottom: 2px solid #151515;
+				display: flex;
+				flex-flow: column nowrap;
+				box-shadow: 0px 0px 4px 1px inset rgba(0, 0, 0, 0.22);
+			}
+			.panel__section:nth-of-type(2) {
+				box-shadow: 0px 1px 3px 0px inset rgba(0, 0, 0, 0.42);
+			}
+			.panel__section:last-of-type {
+				border: none;
+				flex-grow: 1;
+			}	
+			.panel__section.highlighted {
+				background-color: #ed6142;
+			}
+			.panel__section > h3 {
+				margin: 15px 0px;
+				font-size: 20px;
+				color: #1a1a1a;
+				text-align: center;
+			}
+			.panel__section > p {
+				padding: 0;
+			}
+			.panel__row {
+				display: flex;
+				flex-flow: row wrap;
+				justify-content: space-between;
+				align-items: center;
+				padding: 10px 5px;
+				border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+			}
+			.panel__row:last-of-type {
+				border-bottom: none;
+			}
+			.panel__row > .grow {
+				flex-grow: 1;
+			}
+			.panel__row > .start {
+				align-self: flex-start;
+			}
+			.panel__row > p {
+				font-weight: bolder;
+				margin: 0px;
+			}
+
+			/* Tomato styles */
+
+			@media only screen and (min-width: 600px) {
+				.panel {
+					display: flex;
+					align-self: center;
+					box-shadow: 0px 1px 3px 0px rgba(0, 0, 0, 0.42);
+					border: 2px solid #151515;
+					border-radius: 10px;
+					overflow: hidden;
+					margin-top: 20px;
+				}
+
+				.info {
+					margin: 40px auto;
+				}
+			}
+
+			.tomato {
+				height: 25px;
+				margin-right: 10px;
+				fill: #ed6142;
+			}
+
+			.info {
+				max-width: 600px;
+			}
+
+			bnc-element[name="info"] {
+				display: flex;
+				flex-direction: column;
+			}
+
+			.info p[bnc-bind="lastImageTime$"] {
+				margin-left: 6px;
+			}
+
+			.days__holder {
+				display: flex;
+				flex-direction: column;
 			}
 
 			.day {
 				display: flex;
+				flex-grow: 1;
+				flex-flow: row nowrap;
+
+				justify-content: space-between;
+				align-items: center;
+			}
+
+			.day > div {
+				display: flex;
 				flex-flow: row nowrap;
 				align-items: center;
-				justify-content: space-between;
+			}
 
-				padding: 10px;
-				border: 1px dashed rgba(0, 0, 0, 0.12);
-				border-radius: 5px;
+			.day .images {
+				display: flex;
+				flex-flow: row nowrap;
+				align-items: center;
+			}
 
-				margin: 5px;
+			.day .images > p {
+				margin: 0 5px 0 15px;
+				min-width: 50px;
+				text-align: right;
+			}
+
+			.day button {
+				display: flex;
+				align-items: center;
+				text-decoration: none;
 			}
 
 			.day h3 {
-				margin: 10px;
+				margin: 0;
 			}
-
-			.info {
-				display: inline-flex;
-				flex-flow: column nowrap;
-
-				margin: 5px;
-				padding: 10px;
-				border: 3px dashed #3288bd;
-				border-radius: 5px;
-			}
-
-			.info > div:first-of-type {
-				display: flex;
-				flex-flow: row nowrap;
-				justify-content: space-between;
-				align-items: center;
-			}
-			
 		</style>
 	</head>
 	<body>
 		<bnc-root>
 			<bnc-module name="resources">
-				<bnc-element name="info" info$="currentInfo$"></bnc-element>
+				<div class="info panel">
+					<div class="panel__header">
+						<svg version="1.1" class="tomato" xmlns="http://www.w3.org/2000/svg" x="0px" y="0px"
+								 viewBox="0 0 38.016 38.016">
+							<g>
+								<g id="b31_tomato">
+									<path d="M19.008,7.591C4.519,5.417,0.535,12.997,0.535,21.898c0,8.902,8.27,16.118,18.473,16.118
+										c10.2,0,18.472-7.216,18.472-16.117C37.479,12.997,33.134,4.692,19.008,7.591z"/>
+									<path d="M16.571,6.685l2.779,0.317c3.043-0.152,3.768-3.805,3.768-3.805l-2.589,1.827V2.436l-1.827,2.283L17.639,0v5.024
+										l-2.743-1.371l1.376,2.251L16.571,6.685z"/>
+								</g>
+								<g id="Capa_1_205_">
+								</g>
+							</g>
+						</svg>
+						<h2>Tomato Cam</h2>
+					</div>
 
-				<div class="days_holder">
-					<div bnc-for="day in currentDays$">
-						<div>
-							<bnc-element name="day" day="day"></bnc-element>
+					<bnc-element name="info" info$="currentInfo$"></bnc-element>
+
+					<div class="panel__section">
+						<h3>Recorded Days</h3>
+						<i bnc-if="ComputedObservable(currentDays$, a => a.length === 0)"
+							class="ri-download-cloud-2-line placeholder">
+						</i>
+						<div bnc-for="day in currentDays$">
+							<div class="panel__row">
+								<bnc-element name="day" day="day"></bnc-element>
+							</div>
 						</div>
 					</div>
+
 				</div>
 			</bnc-module>
 		</bnc-root>
