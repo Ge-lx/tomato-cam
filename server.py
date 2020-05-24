@@ -149,7 +149,7 @@ def route__days (req, params):
 			'hasVideo': hasVideo,
 			'numOfImages': numOfImages,
 		})
-		days.sort(key = lambda x: x['date'])
+		days.sort(key = lambda x: -x['date'])
 
 	return req.do_JSON(days)
 
@@ -160,7 +160,8 @@ def route__static (req, params):
 	return req.do_FILE(req.path)
 
 def route__currentImage (req, params):
-	refreshImage()
+	# Less chance to intefere with timed recordings + faster response
+	# refreshImage()
 	return req.do_FILE('/current.jpg')
 
 def __routes (router):
