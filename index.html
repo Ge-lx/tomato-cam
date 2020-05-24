@@ -112,7 +112,7 @@
 							obs$.value = await sendFetch('GET', url);
 						};
 
-						setInterval(update, 5000);
+						setInterval(update, 10 * 1000);
 						update();
 						return obs$;
 					};
