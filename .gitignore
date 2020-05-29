@@ -1,2 +1,4 @@
 series/*
 current.jpg
+node_modules/*
+data/*
