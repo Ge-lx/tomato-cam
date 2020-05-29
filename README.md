@@ -11,6 +11,7 @@
  - [ ] More information (weather, temp)
 
 #### General
+ - [ ] Automatic oncatenation of videos for complete timelapse (http://trac.ffmpeg.org/wiki/Concatenate)
  - [ ] Detection of obstructed frames (during plant maintainance)
  - [ ] Normalization of image brightness ( -> max)
  	- [ ] Evaluation of image brightness over time (image metadata ISO, Exposure)
