@@ -41,9 +41,9 @@ const utils = (function () {
 	Date.prototype.toISODateString = function () {
 		// This is an inline function with an inline conditional expression.
 		const pad = x => x < 10 ? ('0' + x) : x;
-		return this.getUTCFullYear() +
-	        '-' + pad(this.getUTCMonth() + 1) +
-	        '-' + pad(this.getUTCDate());
+		return this.getFullYear() +
+	        '-' + pad(this.getMonth() + 1) +
+	        '-' + pad(this.getDate());
 	};
 
 	const isDir = async (path) => {
