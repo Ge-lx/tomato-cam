@@ -49,7 +49,7 @@ const utils = (function () {
 	const isDir = async (path) => {
 		try {
 			const stat = await fs.lstat(path);
-			return stat.isDirectory();
+			return stat.isDirectory() || stat.isSymbolicLink();
 		} catch (error) {
 			return false;
 		}
@@ -58,7 +58,7 @@ const utils = (function () {
 	const isFile = async (path) => {
 		try {
 			const stat = await fs.lstat(path);
-			return stat.isFile();
+			return stat.isFile() || stat.isSymbolicLink();
 		} catch (error) {
 			return false;
 		}
