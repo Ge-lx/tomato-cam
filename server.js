@@ -227,7 +227,7 @@ const httpServerAPI = (function () {
 			}
 		};
 
-		return days;
+		return days.reverse();
 	};
 
 	return { getInfo, getDays };
