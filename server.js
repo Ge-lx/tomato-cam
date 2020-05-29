@@ -11,7 +11,7 @@ const URL_SETTINGS =  `${IMAGE_HOST}/settings`;
 const URL_IMAGE = `${IMAGE_HOST}/photo.jpg`;
 
 const IMAGE_ROOT = './data';
-const HTTP_PORT = 3000;
+const HTTP_PORT = 80;
 
 const DEFAULT_SETTINGS = {
 	'flashmode': 'auto',
@@ -195,7 +195,7 @@ const refreshAndSaveImage = async () => {
 };
 
 // Capture 20 images per hour | ~28GB per month at 2MB per image
-// setInterval(refreshAndSaveImage, 3 * 60 * 1000);
+setInterval(refreshAndSaveImage, 3 * 60 * 1000);
 
 
 
