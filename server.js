@@ -187,11 +187,15 @@ const refreshImage = async () => {
 };
 
 const refreshAndSaveImage = async () => {
-	await refreshImage();
-	const imagePath = await getImagePath();
+	try {
+		await refreshImage();
+		const imagePath = await getImagePath();
 
-	await exec(`cp ./current.jpg ${imagePath}`);
-	await event__newImageCaptured(imagePath);
+		await exec(`cp ./current.jpg ${imagePath}`);
+		await event__newImageCaptured(imagePath);
+	} catch (error) {
+		console.error('Error capturig image: ', error);
+	}
 };
 
 // Capture 20 images per hour | ~28GB per month at 2MB per image
