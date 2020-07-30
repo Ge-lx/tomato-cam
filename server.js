@@ -170,7 +170,7 @@ const getCurrentSettings = () => {
 	const hourNow = new Date().getHours();
 	return {
 		...DEFAULT_SETTINGS,
-		exposure: (hourNow < 6 || hourNow > 21) ? 4 : 0
+		exposure: (hourNow < 6 || hourNow > 20) ? 4 : 0
 	};
 }
 
