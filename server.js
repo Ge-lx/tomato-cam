@@ -6,7 +6,7 @@ const { promisify } = require('util');
 const exec = promisify(require('child_process').exec);
 
 // ----------- CONFIGURATION ----------------------------
-const IMAGE_HOST = `http://192.168.178.124:8080`;
+const IMAGE_HOST = `http://192.168.178.35:8080`;
 const URL_SETTINGS =  `${IMAGE_HOST}/settings`;
 const URL_IMAGE = `${IMAGE_HOST}/photo.jpg`;
 
